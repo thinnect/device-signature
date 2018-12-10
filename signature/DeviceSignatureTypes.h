@@ -90,17 +90,18 @@ typedef struct usersig_header_v3_component {
 
 	int64_t unix_time; // Manufacturing timestamp
 
+	uint8_t component_uuid[USERSIG_UUID_LENGTH];
 	uint8_t component_name[USERSIG_BOARDNAME_MAX_STRLEN]; // 16 chars or 0 terminated
 
 	uint8_t component_version_major;
 	uint8_t component_version_minor;
 	uint8_t component_version_assembly;
 
-	uint8_t component_uuid[USERSIG_UUID_LENGTH];
+	uint8_t serial_number[USERSIG_UUID_LENGTH];
 
 	uint8_t manufacturer_uuid[USERSIG_UUID_LENGTH];
 
-	uint8_t data_length; // Length of the following data array
+	uint16_t data_length; // Length of the following data array
 	uint8_t data[];      // Component specific data - calibration for example
 } usersig_header_v3_component_t;
 #pragma pack(pop)

@@ -10,7 +10,6 @@
 #include <string.h>
 #include <stdio.h>
 
-static FILE* sigPtr = NULL;
 static char* sigFileName = NULL;
 
 void sigAreaInit(const char* filename)
