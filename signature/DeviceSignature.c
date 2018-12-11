@@ -21,9 +21,9 @@
 static uint8_t mStatus = SIG_OFF;
 static uint8_t mEUI64[8];
 
-uint16_t findSignature(uint8_t sigtype, uint16_t offset)
+static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 {
-	while(offset < sigAreaGetSize()) {
+	while (offset < sigAreaGetSize()) {
 		uint16_t signSize = 0;
 		packed_semver_t ver;
 		uint8_t signType = 0;
@@ -36,7 +36,7 @@ uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 
 		if (ver.major == 1) { // Ver 1 signatures have a fixed size
 			signSize = 768;
-			if(sigtype != 0) {
+			if (sigtype != 0) {
 				return 0xFFFF; // Ver 1 only has sig type 0
 			}
 		}
@@ -44,7 +44,7 @@ uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 			if ((ver.major == 2)&&(sigtype != 0)) {
 				return 0xFFFF; // Ver 2 only has sig type 0
 			}
-			sigAreaRead(offset+sizeof(ver), &signSize, sizeof(ver));
+			sigAreaRead(offset+sizeof(ver), &signSize, sizeof(signSize));
 			signSize = swap_uint16(signSize); // Values are stored big-endian
 		}
 
@@ -76,7 +76,7 @@ uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 
 		sigAreaRead(offset+sizeof(ver)+sizeof(signSize), &signType, sizeof(signType));
 
-		if(signType == sigtype) { // Found requested type of signature
+		if (signType == sigtype) { // Found requested type of signature
 			return offset;
 		}
 
@@ -87,16 +87,34 @@ uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 
 semver_t getSignatureVersion(uint16_t offset) {
 	semver_t v = {0,0,0};
-	sigAreaRead(offset, &v, sizeof(v));
+	packed_semver_t pv;
+	sigAreaRead(offset, &pv, sizeof(pv));
+	v.major = pv.major;
+	v.minor = pv.minor;
+	v.patch = pv.patch;
 	return v;
+}
+
+uint16_t getSignatureLength(uint16_t offset)
+{
+	semver_t ver = getSignatureVersion(offset);
+	if (ver.major == 1) { // Ver 1 signatures have a fixed size
+		return 768;
+	}
+	else { // Others specify the size after the version
+		uint16_t signSize;
+		sigAreaRead(offset+sizeof(ver), &signSize, sizeof(signSize));
+		return swap_uint16(signSize); // Values are stored big-endian
+	}
+	return 0;
 }
 
 void getEui64(uint8_t eui[8], uint16_t offset) {
 	semver_t v = getSignatureVersion(offset);
-	if(v.major == 1) {
+	if (v.major == 1) {
 		sigAreaRead(offset+offsetof(usersig_header_v1_t, eui64), eui, 8);
 	}
-	else if(v.major == 2) {
+	else if (v.major == 2) {
 		sigAreaRead(offset+offsetof(usersig_header_v2_t, eui64), eui, 8);
 	}
 	else {
@@ -112,16 +130,18 @@ int8_t sigInit(void)
 		getEui64(mEUI64, offset);
 	}
 	else {
-		memset(mEUI64, 0, sizeof(mEUI64));
-		mStatus = SIG_EMPTY;
-		for(uint16_t i=0;i<sigAreaGetSize();i++) { // Detect if uninitialized
-			if(sigAreaReadByte(i) != 0xFF) {
+		for (uint16_t i=0;i<sigAreaGetSize();i++) { // Detect if uninitialized
+			if (sigAreaReadByte(i) != 0xFF) {
 				mStatus = SIG_BAD;
-				break;
+				memset(mEUI64, 0, sizeof(mEUI64));
+				return SIG_BAD;
 			}
 		}
+		mStatus = SIG_EMPTY;
+		memset(mEUI64, 0xFF, sizeof(mEUI64));
+		return SIG_EMPTY;
 	}
-	return mStatus;
+	return SIG_GOOD;
 }
 
 void sigGetEui64(uint8_t *buf)
@@ -131,20 +151,52 @@ void sigGetEui64(uint8_t *buf)
 
 uint16_t sigGetNodeId(void)
 {
-	return mEUI64[6] << 8 | mEUI64[7];
+	uint16_t addr = mEUI64[6] << 8 | mEUI64[7];
+	if ((addr == 0)||(addr == 0xFFFF)) {
+		addr = 1;
+	}
+	return addr;
 }
 
 semver_t sigGetSignatureVersion(void)
 {
 	semver_t v = {0,0,0};
 	uint16_t offset = findSignature(0, 0);
-	if(offset < 0xFFFF) {
+	if (offset < 0xFFFF) {
 		return getSignatureVersion(0);
 	}
 	return v;
 }
 
-semver_t sigGetPcbVersion(void)
+semver_t sigGetBoardVersion(void)
+{
+	packed_semver_t pv = {0,0,0};
+	semver_t v;
+
+	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
+	if (offset < 0xFFFF) { // This is version 3 (or later)
+		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_version_major), &pv, sizeof(pv));
+	}
+	else {
+		offset = findSignature(0, 0);
+		if (offset < 0xFFFF) {
+			semver_t sigver = getSignatureVersion(offset);
+			if (sigver.major == 1) {
+				sigAreaRead(offset+offsetof(usersig_header_v1_t, pcb_version_major), &pv, sizeof(pv));
+			}
+			else if (sigver.major == 2) {
+				sigAreaRead(offset+offsetof(usersig_header_v2_t, pcb_version_major), &pv, sizeof(pv));
+			}
+		}
+	}
+
+	v.major = pv.major;
+	v.minor = pv.minor;
+	v.patch = pv.patch;
+	return v;
+}
+
+semver_t sigGetPlatformVersion(void)
 {
 	packed_semver_t pv = {0,0,0};
 	semver_t v;
@@ -153,25 +205,9 @@ semver_t sigGetPcbVersion(void)
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_version_major), &pv, sizeof(pv));
 	}
-	else { // Maybe no platform defined, fall back to board
-		offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
-		if (offset < 0xFFFF) { // This is version 3 (or later)
-			sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_version_major), &pv, sizeof(pv));
-		}
-		else {
-			offset = findSignature(0, 0);
-			if (offset < 0xFFFF) {
-				semver_t sigver = getSignatureVersion(offset);
-				if(sigver.major == 1) { // v1 does not have UUIDs
-					sigAreaRead(offset+offsetof(usersig_header_v1_t, pcb_version_major), &pv, sizeof(pv));
-				}
-				else if(sigver.major == 2) {
-					sigAreaRead(offset+offsetof(usersig_header_v2_t, pcb_version_major), &pv, sizeof(pv));
-				}
-			}
-		}
+	else {
+		return sigGetBoardVersion();
 	}
-
 	v.major = pv.major;
 	v.minor = pv.minor;
 	v.patch = pv.patch;
@@ -188,10 +224,10 @@ void sigGetBoardUUID(uint8_t uuid[16])
 		offset = findSignature(0, 0);
 		if (offset < 0xFFFF) {
 			semver_t sigver = getSignatureVersion(offset);
-			if(sigver.major == 1) { // v1 does not have UUIDs
+			if (sigver.major == 1) { // v1 does not have UUIDs
 				memset(uuid, 0, USERSIG_UUID_LENGTH); // TODO implement the mapping
 			}
-			else if(sigver.major == 2) {
+			else if (sigver.major == 2) {
 				sigAreaRead(offset+offsetof(usersig_header_v2_t, board_uuid), uuid, USERSIG_UUID_LENGTH);
 			}
 			else {
@@ -215,35 +251,40 @@ void sigGetPlatformUUID(uint8_t uuid[16])
 	}
 }
 
-void sigGetManufacturerUUID(uint8_t uuid[16])
+void sigGetBoardManufacturerUUID(uint8_t uuid[16])
+{
+	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
+	if (offset < 0xFFFF) {
+		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
+	}
+	else { // version 1 or 2
+		offset = findSignature(0, 0);
+		if (offset < 0xFFFF) {
+			semver_t sigver = getSignatureVersion(offset);
+			if (sigver.major == 1) { // v1 does not have manufacturer info
+				memset(uuid, 0, USERSIG_UUID_LENGTH);
+			}
+			else if (sigver.major == 2) {
+				sigAreaRead(offset+offsetof(usersig_header_v2_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
+			}
+			else {
+				memset(uuid, 0, USERSIG_UUID_LENGTH);
+			}
+		}
+		else {
+			memset(uuid, 0, USERSIG_UUID_LENGTH);
+		}
+	}
+}
+
+void sigGetPlatformManufacturerUUID(uint8_t uuid[16])
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
 	}
 	else { // Fall back to board manufacturer if no platform manufacturer
-		offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
-	 	if (offset < 0xFFFF) {
-	 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
-	 	}
-	 	else { // version 1 or 2
-			offset = findSignature(0, 0);
-			if (offset < 0xFFFF) {
-				semver_t sigver = getSignatureVersion(offset);
-				if(sigver.major == 1) { // v1 does not have manufacturer info
-					memset(uuid, 0, USERSIG_UUID_LENGTH);
-				}
-				else if(sigver.major == 2) {
-					sigAreaRead(offset+offsetof(usersig_header_v2_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
-				}
-				else {
-					memset(uuid, 0, USERSIG_UUID_LENGTH);
-				}
-			}
-			else {
-				memset(uuid, 0, USERSIG_UUID_LENGTH);
-			}
-		}
+		sigGetBoardManufacturerUUID(uuid);
 	}
 }
 
@@ -252,12 +293,13 @@ void sigGetBoardName(uint8_t buf[17])
 	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_name), buf, 16);
+		buf[16] = '\0';
 	}
 	else { // version 1 or 2
 		offset = findSignature(0, 0);
 		if (offset < 0xFFFF) {
 			semver_t sigver = getSignatureVersion(offset);
-			if(sigver.major == 1) {
+			if (sigver.major == 1) {
 				sigAreaRead(offset+offsetof(usersig_header_v1_t, board_name), buf, 16);
 				buf[16] = '\0';
 			}
@@ -280,34 +322,29 @@ void sigGetPlatformName(uint8_t buf[17])
 	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_name), buf, 16);
+		buf[16] = '\0';
 	}
 	else { // Fall back to board name for older versions or cases where there is no platform sig
 		sigGetBoardName(buf);
 	}
 }
 
-int64_t sigGetProductionTime(void)
+int64_t sigGetBoardProductionTime(void)
 {
 	int64_t timestamp = 0;
-	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
+	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, unix_time), &timestamp, sizeof(timestamp));
 	}
-	else { // version 1 or 2
-		offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
-		if (offset < 0xFFFF) { // This is version 3 (or later)
-			sigAreaRead(offset+offsetof(usersig_header_v3_component_t, unix_time), &timestamp, sizeof(timestamp));
-		}
-		else {
-			offset = findSignature(0, 0);
-			if (offset < 0xFFFF) {
-				semver_t sigver = getSignatureVersion(offset);
-				if(sigver.major == 1) {
-					sigAreaRead(offset+offsetof(usersig_header_v1_t, unix_time), &timestamp, sizeof(timestamp));
-				}
-				else if(sigver.major == 2) {
-					sigAreaRead(offset+offsetof(usersig_header_v2_t, unix_time), &timestamp, sizeof(timestamp));
-				}
+	else {
+		offset = findSignature(0, 0);
+		if (offset < 0xFFFF) {
+			semver_t sigver = getSignatureVersion(offset);
+			if (sigver.major == 1) {
+				sigAreaRead(offset+offsetof(usersig_header_v1_t, unix_time), &timestamp, sizeof(timestamp));
+			}
+			else if (sigver.major == 2) {
+				sigAreaRead(offset+offsetof(usersig_header_v2_t, unix_time), &timestamp, sizeof(timestamp));
 			}
 		}
 	}
@@ -315,3 +352,209 @@ int64_t sigGetProductionTime(void)
 	return timestamp;
 }
 
+int64_t sigGetPlatformProductionTime(void)
+{
+	int64_t timestamp = 0;
+	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
+	if (offset < 0xFFFF) { // This is version 3 (or later)
+		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, unix_time), &timestamp, sizeof(timestamp));
+		timestamp = swap_int64(timestamp);
+	}
+	else { // version 1 or 2
+		return sigGetBoardProductionTime();
+	}
+	return timestamp;
+}
+
+void sigGetBoardSerial(uint8_t serial[16])
+{
+	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
+	if (offset < 0xFFFF) {
+		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, serial_number), serial, 16);
+	}
+	else {
+		memset(serial, 0, 16);
+	}
+}
+
+void sigGetPlatformSerial(uint8_t serial[16])
+{
+	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
+	if (offset < 0xFFFF) {
+		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, serial_number), serial, 16);
+	}
+	else {
+		sigGetBoardSerial(serial);
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Element API
+// -----------------------------------------------------------------------------
+
+uint16_t sigFirstElement(uint8_t tp)
+{
+	return findSignature(tp, 0);
+}
+
+uint16_t sigNextElement(uint8_t tp, uint16_t offset)
+{
+	uint16_t length = getSignatureLength(offset);
+	return findSignature(tp, offset+length);
+}
+
+int8_t sigGetElementVersion(uint8_t tp, semver_t* v, uint16_t sig_offset)
+{
+	packed_semver_t pv;
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, component_version_major), &pv, sizeof(pv));
+		v->major = pv.major;
+		v->minor = pv.minor;
+		v->patch = pv.patch;
+		return 0;
+	}
+	return -1;
+}
+
+int8_t sigGetElementProductionTime(uint8_t tp, int64_t* timestamp, uint16_t sig_offset)
+{
+	int64_t ts = 0;
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, unix_time), &ts, sizeof(ts));
+		*timestamp = swap_int64(ts);
+		return 0;
+	}
+	return -1;
+}
+
+int8_t sigGetElementManufacturerUUID(uint8_t tp, uint8_t uuid[16], uint16_t sig_offset)
+{
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
+		return 0;
+	}
+	return -1;
+}
+
+int8_t sigGetElementUUID(uint8_t tp, uint8_t uuid[16], uint16_t sig_offset)
+{
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, component_uuid), uuid, USERSIG_UUID_LENGTH);
+		return 0;
+	}
+	return -1;
+}
+
+int8_t sigGetElementName(uint8_t tp, uint8_t name[17], uint16_t sig_offset)
+{
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, component_name), name, 16);
+		name[16] = '\0';
+		return 0;
+	}
+	return -1;
+}
+
+int8_t sigGetElementSerial(uint8_t tp, uint8_t serial[16], uint16_t sig_offset)
+{
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, serial_number), serial, 16);
+		return 0;
+	}
+	return -1;
+}
+
+int8_t sigGetElementPosition(uint8_t tp, uint8_t* position, uint16_t sig_offset)
+{
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, position), position, sizeof(uint8_t));
+		return 0;
+	}
+	return -1;
+}
+
+int32_t sigGetElementDataLength(uint8_t tp, uint16_t sig_offset)
+{
+	uint16_t len;
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, data_length), &len, sizeof(len));
+		return swap_uint16(len);
+	}
+	return -1;
+}
+
+int32_t sigGetElementData(uint8_t tp, uint8_t* buffer, uint16_t length, uint16_t data_offset, uint8_t sig_offset)
+{
+	uint16_t o = findSignature(tp, sig_offset);
+	if (o == sig_offset) {
+		uint16_t len;
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, data_length), &len, sizeof(len));
+		len = swap_uint16(len);
+		if (len <= data_offset) {
+			return 0;
+		}
+		if (data_offset + length > len) {
+			length = len - data_offset;
+		}
+		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, data_length)+data_offset, buffer, length);
+		return length;
+	}
+	return -1;
+}
+
+// -----------------------------------------------------------------------------
+// Component API
+// -----------------------------------------------------------------------------
+
+uint16_t sigFirstComponent()
+{
+	return sigFirstElement(SIGNATURE_TYPE_COMPONENT);
+}
+uint16_t sigNextComponent(uint16_t offset)
+{
+	return sigNextElement(SIGNATURE_TYPE_COMPONENT, offset);
+}
+int8_t sigGetComponentVersion(semver_t* v, uint16_t sig_offset)
+{
+	sigGetElementVersion(SIGNATURE_TYPE_COMPONENT, v, sig_offset);
+}
+int8_t sigGetComponentProductionTime(int64_t* timestamp, uint16_t sig_offset)
+{
+	sigGetElementProductionTime(SIGNATURE_TYPE_COMPONENT, timestamp, sig_offset);
+}
+int8_t sigGetComponentManufacturerUUID(uint8_t uuid[16], uint16_t sig_offset)
+{
+	sigGetElementManufacturerUUID(SIGNATURE_TYPE_COMPONENT, uuid, sig_offset);
+}
+int8_t sigGetComponentUUID(uint8_t uuid[16], uint16_t sig_offset)
+{
+	sigGetElementUUID(SIGNATURE_TYPE_COMPONENT, uuid, sig_offset);
+}
+int8_t sigGetComponentName(uint8_t name[17], uint16_t sig_offset)
+{
+	sigGetElementName(SIGNATURE_TYPE_COMPONENT, name, sig_offset);
+}
+int8_t sigGetComponentSerial(uint8_t serial[16], uint16_t sig_offset)
+{
+	sigGetElementSerial(SIGNATURE_TYPE_COMPONENT, serial, sig_offset);
+}
+int8_t sigGetComponentPosition(uint8_t* position, uint16_t sig_offset)
+{
+	sigGetElementPosition(SIGNATURE_TYPE_COMPONENT, position, sig_offset);
+}
+int32_t sigGetComponentDataLength(uint16_t sig_offset)
+{
+	return sigGetElementDataLength(SIGNATURE_TYPE_COMPONENT, sig_offset);
+}
+int32_t sigGetComponentData(uint8_t* buffer, uint16_t length, uint16_t data_offset, uint8_t sig_offset)
+{
+	return sigGetElementData(SIGNATURE_TYPE_COMPONENT, buffer, length, data_offset, sig_offset);
+}

@@ -23,36 +23,98 @@ void printSignatureInfo() {
 	uint8_t uuid[16];
 	uint8_t suuid[37];
 	char name[17];
-	semver_t pcbv;
+	semver_t ver;
 	int64_t ts;
+	uint8_t serial[17];
+	uint8_t sserial[37];
 
 	sigGetEui64(eui);
 	sprintEui64(seui, eui);
 	printf("        EUI: %s\n", seui);
 
-	sigGetPlatformUUID(uuid);
-	sprintUUID(suuid, uuid);
-	printf("Pltfrm UUID: %s\n", suuid);
-
 	sigGetBoardUUID(uuid);
 	sprintUUID(suuid, uuid);
 	printf(" Board UUID: %s\n", suuid);
 
-	sigGetManufacturerUUID(uuid);
+	sigGetBoardName(name);
+	printf("      Board: %s\n", name);
+
+	ver = sigGetBoardVersion();
+	printf("    Version: %d.%d.%d\n", ver.major, ver.minor, ver.patch);
+
+	sigGetBoardSerial(serial);
+	serial[16] = '\0';
+	sprintUUID(sserial, serial);
+	printf("     Serial: %s (%s)\n", serial, sserial);
+
+	sigGetBoardManufacturerUUID(uuid);
 	sprintUUID(suuid, uuid);
 	printf("  Mfgr UUID: %s\n", suuid);
 
-	sigGetBoardName(name);
-	printf("      Board: %s\n", name);
+	ts = sigGetBoardProductionTime();
+	printf("  Prod time: %"PRIi64"\n", ts);
+
+	sigGetPlatformUUID(uuid);
+	sprintUUID(suuid, uuid);
+	printf("Pltfrm UUID: %s\n", suuid);
 
 	sigGetPlatformName(name);
 	printf("   Platform: %s\n", name);
 
-	pcbv = sigGetPcbVersion();
-	printf("        PCB: %d.%d.%d\n", pcbv.major, pcbv.minor, pcbv.patch);
+	ver = sigGetPlatformVersion();
+	printf("    Version: %d.%d.%d\n", ver.major, ver.minor, ver.patch);
 
-	ts = sigGetProductionTime();
+	sigGetPlatformSerial(serial);
+	serial[16] = '\0';
+	sprintUUID(sserial, serial);
+	printf("     Serial: %s (%s)\n", serial, sserial);
+
+	sigGetPlatformManufacturerUUID(uuid);
+	sprintUUID(suuid, uuid);
+	printf("  Mfgr UUID: %s\n", suuid);
+
+	ts = sigGetPlatformProductionTime();
 	printf("  Prod time: %"PRIi64"\n", ts);
+}
+
+void printComponentInfo(uint16_t offset) {
+	uint8_t uuid[16];
+	uint8_t suuid[37];
+	char name[17];
+	semver_t ver;
+	int64_t ts;
+	uint8_t position;
+	uint8_t serial[17];
+	uint8_t sserial[37];
+	int32_t dataLength;
+
+	sigGetComponentUUID(uuid, offset);
+	sprintUUID(suuid, uuid);
+	printf("   Cmp UUID: %s\n", suuid);
+
+	sigGetComponentName(name, offset);
+	printf("       Name: %s\n", name);
+
+	sigGetComponentVersion(&ver, offset);
+	printf("    Version: %d.%d.%d\n", ver.major, ver.minor, ver.patch);
+
+	sigGetComponentManufacturerUUID(uuid, offset);
+	sprintUUID(suuid, uuid);
+	printf("  Mfgr UUID: %s\n", suuid);
+
+	sigGetComponentProductionTime(&ts, offset);
+	printf("  Prod time: %"PRIi64"\n", ts);
+
+	sigGetComponentPosition(&position, offset);
+	printf("   Position: %"PRIu8"\n", position);
+
+	sigGetComponentSerial(serial, offset);
+	serial[16] = '\0';
+	sprintUUID(sserial, serial);
+	printf("     Serial: %s (%s)\n", serial, sserial);
+
+	dataLength = sigGetComponentDataLength(offset);
+	printf("       Data: %"PRIi32"\n", dataLength);
 }
 
 int main() {
@@ -83,6 +145,27 @@ int main() {
 	printf("\n");
 	printSignatureInfo();
 	printf("\n");
+
+	sigAreaInit("EUI-64_DEADBEEF1234567F.bin");
+	printf("size=%d\n", sigAreaGetSize());
+	printf("init=%d\n", sigInit());
+	printf("\n");
+	printSignatureInfo();
+	printf("\n");
+
+	uint16_t offset = sigFirstComponent();
+	while(offset < 0xFFFF) {
+		uint8_t uuid[16], serial[16];
+		char name[17];
+		int64_t timestamp;
+		uint8_t position;
+		semver_t version;
+
+		printf("sig @ 0x%04X\n", offset);
+		printComponentInfo(offset);
+		printf("\n");
+		offset = sigNextComponent(offset);
+	}
 
 	printf("done\n");
 }

@@ -45,17 +45,68 @@ enum SignatureTypes {
 };
 
 int8_t   sigInit(void);
+
 void     sigGetEui64(uint8_t *buf);
-semver_t sigGetPcbVersion(void);
+
+semver_t sigGetBoardVersion(void);
+semver_t sigGetPlatformVersion(void);
 void     sigGetBoardUUID(uint8_t uuid[16]);
 void     sigGetPlatformUUID(uint8_t uuid[16]);
-void     sigGetManufacturerUUID(uint8_t uuid[16]);
+void     sigGetBoardManufacturerUUID(uint8_t uuid[16]);
+void     sigGetPlatformManufacturerUUID(uint8_t uuid[16]);
 void     sigGetBoardName(uint8_t buf[16]);
 void     sigGetPlatformName(uint8_t buf[16]);
-int64_t  sigGetProductionTime(void);
+int64_t  sigGetBoardProductionTime(void);
+int64_t  sigGetPlatformProductionTime(void);
+void     sigGetBoardSerial(uint8_t serial[16]);
+void     sigGetPlatformSerial(uint8_t serial[16]);
 
 semver_t sigGetSignatureVersion(void);
 
 uint16_t sigGetNodeId(void);
+
+
+// -----------------------------------------------------------------------------
+// Component API, use sigFindComponent to search for component info
+// and retrieve details using the returned offset. Commands return positive
+// values on SUCCESS.
+// -----------------------------------------------------------------------------
+
+// Start searching for a component signature from the specified offset.
+// returns the offset of the found component entry or 0xFFFF if nothing found.
+uint16_t sigFirstComponent();
+
+// Find the next component, offset must belong to a previous signature entry.
+// returns the offset of the found component entry or 0xFFFF if nothing found.
+uint16_t sigNextComponent(uint16_t offset);
+
+int8_t sigGetComponentUUID(uint8_t uuid[16], uint16_t offset);
+int8_t sigGetComponentName(uint8_t name[17], uint16_t offset);
+int8_t sigGetComponentVersion(semver_t* v, uint16_t offset);
+int8_t sigGetComponentProductionTime(int64_t* timestamp, uint16_t offset);
+int8_t sigGetComponentManufacturerUUID(uint8_t uuid[16], uint16_t offset);
+int8_t sigGetComponentSerial(uint8_t serial[16], uint16_t offset);
+int8_t sigGetComponentPosition(uint8_t* position, uint16_t offset);
+
+int32_t sigGetComponentDataLength(uint16_t offset);
+int32_t sigGetComponentData(uint8_t* buffer, uint16_t bufferLength, uint16_t dataOffset, uint8_t offset);
+
+// -----------------------------------------------------------------------------
+// Low-level element API
+// Works the same as the component API.
+// -----------------------------------------------------------------------------
+uint16_t sigFirstElement(uint8_t tp);
+uint16_t sigNextElement(uint8_t tp, uint16_t offset);
+
+int8_t sigGetElementUUID(uint8_t tp, uint8_t uuid[16], uint16_t offset);
+int8_t sigGetElementName(uint8_t tp, uint8_t name[17], uint16_t offset);
+int8_t sigGetElementVersion(uint8_t tp, semver_t* v, uint16_t offset);
+int8_t sigGetElementProductionTime(uint8_t tp, int64_t* timestamp, uint16_t offset);
+int8_t sigGetElementManufacturerUUID(uint8_t tp, uint8_t uuid[16], uint16_t offset);
+int8_t sigGetElementSerial(uint8_t tp, uint8_t serial[16], uint16_t offset);
+int8_t sigGetElementPosition(uint8_t tp, uint8_t* position, uint16_t offset);
+
+int32_t sigGetElementDataLength(uint8_t tp, uint16_t offset);
+int32_t sigGetElementData(uint8_t tp, uint8_t* buffer, uint16_t bufferLength, uint16_t dataOffset, uint8_t offset);
 
 #endif // USERSIGNATUREAREA_H_
