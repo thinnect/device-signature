@@ -8,19 +8,8 @@
 #define USERSIGNATUREAREA_H_
 
 enum UserSignatureAreaEnum {
-//	USERSIG_VERSION_MAJOR = 1,
-//	USERSIG_VERSION_MINOR = 0,
-//	USERSIG_SIZE = 768,
-
 	USERSIG_BOARDNAME_MAX_STRLEN = 16,
 	USERSIG_UUID_LENGTH = 16,
-};
-
-enum SigInitResults {
-	SIG_OFF   = -128,
-	SIG_GOOD  = 0,
-	SIG_BAD   = 1,
-	SIG_EMPTY = 127
 };
 
 typedef struct semver {
@@ -44,9 +33,27 @@ enum SignatureTypes {
 	SIGNATURE_TYPE_COMPONENT = 3 // Components list individual parts of a platform
 };
 
+
+
+// -----------------------------------------------------------------------------
+// General signature - board & platform API
+// -----------------------------------------------------------------------------
+
 int8_t   sigInit(void);
 
+enum SigInitResults {
+	SIG_OFF   = -128,
+	SIG_GOOD  = 0,
+	SIG_BAD   = 1,
+	SIG_EMPTY = 127
+};
+
+// Copy the EUI64 into the specified buffer
+// EUI gets initialized to all 0 on errors and all ff when no signature found.
 void     sigGetEui64(uint8_t *buf);
+
+// Returns the last 2 bytes of the EUI64, takes care not to return 0 or bcast.
+uint16_t sigGetNodeId(void);
 
 semver_t sigGetBoardVersion(void);
 semver_t sigGetPlatformVersion(void);
@@ -63,7 +70,6 @@ void     sigGetPlatformSerial(uint8_t serial[16]);
 
 semver_t sigGetSignatureVersion(void);
 
-uint16_t sigGetNodeId(void);
 
 
 // -----------------------------------------------------------------------------
@@ -89,7 +95,9 @@ int8_t sigGetComponentSerial(uint8_t serial[16], uint16_t offset);
 int8_t sigGetComponentPosition(uint8_t* position, uint16_t offset);
 
 int32_t sigGetComponentDataLength(uint16_t offset);
-int32_t sigGetComponentData(uint8_t* buffer, uint16_t bufferLength, uint16_t dataOffset, uint8_t offset);
+int32_t sigGetComponentData(uint8_t* buf, uint16_t bufLen, uint16_t dataOffset, uint8_t offset);
+
+
 
 // -----------------------------------------------------------------------------
 // Low-level element API
@@ -107,6 +115,6 @@ int8_t sigGetElementSerial(uint8_t tp, uint8_t serial[16], uint16_t offset);
 int8_t sigGetElementPosition(uint8_t tp, uint8_t* position, uint16_t offset);
 
 int32_t sigGetElementDataLength(uint8_t tp, uint16_t offset);
-int32_t sigGetElementData(uint8_t tp, uint8_t* buffer, uint16_t bufferLength, uint16_t dataOffset, uint8_t offset);
+int32_t sigGetElementData(uint8_t tp, uint8_t* buf, uint16_t bufLen, uint16_t dataOffset, uint8_t offset);
 
 #endif // USERSIGNATUREAREA_H_
