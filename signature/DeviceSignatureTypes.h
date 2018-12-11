@@ -101,6 +101,8 @@ typedef struct usersig_header_v3_component {
 
 	uint8_t manufacturer_uuid[USERSIG_UUID_LENGTH];
 
+	uint8_t position;
+
 	uint16_t data_length; // Length of the following data array
 	uint8_t data[];      // Component specific data - calibration for example
 } usersig_header_v3_component_t;
