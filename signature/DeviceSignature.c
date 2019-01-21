@@ -288,7 +288,7 @@ void sigGetPlatformManufacturerUUID(uint8_t uuid[16])
 	}
 }
 
-void sigGetBoardName(uint8_t buf[17])
+void sigGetBoardName(char buf[17])
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
@@ -317,7 +317,7 @@ void sigGetBoardName(uint8_t buf[17])
 	}
 }
 
-void sigGetPlatformName(uint8_t buf[17])
+void sigGetPlatformName(char buf[17])
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
@@ -449,7 +449,7 @@ int8_t sigGetElementUUID(uint8_t tp, uint8_t uuid[16], uint16_t sig_offset)
 	return -1;
 }
 
-int8_t sigGetElementName(uint8_t tp, uint8_t name[17], uint16_t sig_offset)
+int8_t sigGetElementName(uint8_t tp, char name[17], uint16_t sig_offset)
 {
 	uint16_t o = findSignature(tp, sig_offset);
 	if (o == sig_offset) {
@@ -524,31 +524,31 @@ uint16_t sigNextComponent(uint16_t offset)
 }
 int8_t sigGetComponentVersion(semver_t* v, uint16_t sig_offset)
 {
-	sigGetElementVersion(SIGNATURE_TYPE_COMPONENT, v, sig_offset);
+	return sigGetElementVersion(SIGNATURE_TYPE_COMPONENT, v, sig_offset);
 }
 int8_t sigGetComponentProductionTime(int64_t* timestamp, uint16_t sig_offset)
 {
-	sigGetElementProductionTime(SIGNATURE_TYPE_COMPONENT, timestamp, sig_offset);
+	return sigGetElementProductionTime(SIGNATURE_TYPE_COMPONENT, timestamp, sig_offset);
 }
 int8_t sigGetComponentManufacturerUUID(uint8_t uuid[16], uint16_t sig_offset)
 {
-	sigGetElementManufacturerUUID(SIGNATURE_TYPE_COMPONENT, uuid, sig_offset);
+	return sigGetElementManufacturerUUID(SIGNATURE_TYPE_COMPONENT, uuid, sig_offset);
 }
 int8_t sigGetComponentUUID(uint8_t uuid[16], uint16_t sig_offset)
 {
-	sigGetElementUUID(SIGNATURE_TYPE_COMPONENT, uuid, sig_offset);
+	return sigGetElementUUID(SIGNATURE_TYPE_COMPONENT, uuid, sig_offset);
 }
-int8_t sigGetComponentName(uint8_t name[17], uint16_t sig_offset)
+int8_t sigGetComponentName(char name[17], uint16_t sig_offset)
 {
-	sigGetElementName(SIGNATURE_TYPE_COMPONENT, name, sig_offset);
+	return sigGetElementName(SIGNATURE_TYPE_COMPONENT, name, sig_offset);
 }
 int8_t sigGetComponentSerial(uint8_t serial[16], uint16_t sig_offset)
 {
-	sigGetElementSerial(SIGNATURE_TYPE_COMPONENT, serial, sig_offset);
+	return sigGetElementSerial(SIGNATURE_TYPE_COMPONENT, serial, sig_offset);
 }
 int8_t sigGetComponentPosition(uint8_t* position, uint16_t sig_offset)
 {
-	sigGetElementPosition(SIGNATURE_TYPE_COMPONENT, position, sig_offset);
+	return sigGetElementPosition(SIGNATURE_TYPE_COMPONENT, position, sig_offset);
 }
 int32_t sigGetComponentDataLength(uint16_t sig_offset)
 {

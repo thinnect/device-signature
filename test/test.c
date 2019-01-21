@@ -21,12 +21,12 @@ void printSignatureInfo() {
 	uint8_t eui[8];
 	char seui[17];
 	uint8_t uuid[16];
-	uint8_t suuid[37];
+	char suuid[37];
 	char name[17];
 	semver_t ver;
 	int64_t ts;
 	uint8_t serial[17];
-	uint8_t sserial[37];
+	char sserial[37];
 
 	sigGetEui64(eui);
 	sprintEui64(seui, eui);
@@ -79,13 +79,13 @@ void printSignatureInfo() {
 
 void printComponentInfo(uint16_t offset) {
 	uint8_t uuid[16];
-	uint8_t suuid[37];
+	char suuid[37];
 	char name[17];
 	semver_t ver;
 	int64_t ts;
 	uint8_t position;
 	uint8_t serial[17];
-	uint8_t sserial[37];
+	char sserial[37];
 	int32_t dataLength;
 
 	sigGetComponentUUID(uuid, offset);
@@ -155,12 +155,6 @@ int main() {
 
 	uint16_t offset = sigFirstComponent();
 	while(offset < 0xFFFF) {
-		uint8_t uuid[16], serial[16];
-		char name[17];
-		int64_t timestamp;
-		uint8_t position;
-		semver_t version;
-
 		printf("sig @ 0x%04X\n", offset);
 		printComponentInfo(offset);
 		printf("\n");

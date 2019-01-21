@@ -61,8 +61,8 @@ void     sigGetBoardUUID(uint8_t uuid[16]);
 void     sigGetPlatformUUID(uint8_t uuid[16]);
 void     sigGetBoardManufacturerUUID(uint8_t uuid[16]);
 void     sigGetPlatformManufacturerUUID(uint8_t uuid[16]);
-void     sigGetBoardName(uint8_t buf[16]);
-void     sigGetPlatformName(uint8_t buf[16]);
+void     sigGetBoardName(char buf[16]);
+void     sigGetPlatformName(char buf[16]);
 int64_t  sigGetBoardProductionTime(void);
 int64_t  sigGetPlatformProductionTime(void);
 void     sigGetBoardSerial(uint8_t serial[16]);
@@ -87,7 +87,7 @@ uint16_t sigFirstComponent();
 uint16_t sigNextComponent(uint16_t offset);
 
 int8_t sigGetComponentUUID(uint8_t uuid[16], uint16_t offset);
-int8_t sigGetComponentName(uint8_t name[17], uint16_t offset);
+int8_t sigGetComponentName(char name[17], uint16_t offset);
 int8_t sigGetComponentVersion(semver_t* v, uint16_t offset);
 int8_t sigGetComponentProductionTime(int64_t* timestamp, uint16_t offset);
 int8_t sigGetComponentManufacturerUUID(uint8_t uuid[16], uint16_t offset);
@@ -107,7 +107,7 @@ uint16_t sigFirstElement(uint8_t tp);
 uint16_t sigNextElement(uint8_t tp, uint16_t offset);
 
 int8_t sigGetElementUUID(uint8_t tp, uint8_t uuid[16], uint16_t offset);
-int8_t sigGetElementName(uint8_t tp, uint8_t name[17], uint16_t offset);
+int8_t sigGetElementName(uint8_t tp, char name[17], uint16_t offset);
 int8_t sigGetElementVersion(uint8_t tp, semver_t* v, uint16_t offset);
 int8_t sigGetElementProductionTime(uint8_t tp, int64_t* timestamp, uint16_t offset);
 int8_t sigGetElementManufacturerUUID(uint8_t tp, uint8_t uuid[16], uint16_t offset);
