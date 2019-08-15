@@ -9,14 +9,14 @@
 #define offsetof(t, m) ((size_t)&((t*)0)->m )
 #endif//offsetof
 
-#include "itut_crc.h"
+#include "checksum.h" // for crc_xmodem / crc_ccitt_generic from libcrc
+#include "endianness.h"
 
 #include "SignatureArea.h"
 
 #include "DeviceSignature.h"
 #include "DeviceSignatureTypes.h"
 
-#include "endianessy.h"
 
 static uint8_t mStatus = SIG_OFF;
 static uint8_t mEUI64[8];
@@ -29,7 +29,7 @@ static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 		uint8_t signType = 0;
 		uint16_t i;
 
-		uint16_t crc = 0;
+		uint16_t crc = CRC_START_XMODEM;
 		uint16_t scrc = 0;
 
 		sigAreaRead(offset, &ver, sizeof(ver)); // Read signature version
@@ -45,7 +45,7 @@ static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 				return 0xFFFF; // Ver 2 only has sig type 0
 			}
 			sigAreaRead(offset+sizeof(ver), &signSize, sizeof(signSize));
-			signSize = swap_uint16(signSize); // Values are stored big-endian
+			signSize = ntoh16(signSize); // Values are stored big-endian
 		}
 
 		if (signSize == 0xFFFF) { // Probably version was FF.FF.FF as well
@@ -58,10 +58,10 @@ static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 		}
 
 		for (i=0; i<(signSize-2); i++) {
-			crc = byteCrc(sigAreaReadByte(offset+i), crc); // TODO use a generic CRC function
+			crc = update_crc_ccitt(crc, sigAreaReadByte(offset+i));
 		}
 		sigAreaRead(offset+i, &scrc, 2);
-		scrc = swap_uint16(scrc);
+		scrc = ntoh16(scrc);
 
 		if (crc != scrc) {
 			printf("SIG ERR: %x != %x\n", scrc, crc);
@@ -104,7 +104,7 @@ uint16_t getSignatureLength(uint16_t offset)
 	else { // Others specify the size after the version
 		uint16_t signSize;
 		sigAreaRead(offset+sizeof(ver), &signSize, sizeof(signSize));
-		return swap_uint16(signSize); // Values are stored big-endian
+		return ntoh16(signSize); // Values are stored big-endian
 	}
 	return 0;
 }
@@ -348,7 +348,7 @@ int64_t sigGetBoardProductionTime(void)
 			}
 		}
 	}
-	timestamp = swap_int64(timestamp);
+	timestamp = ntoh64(timestamp);
 	return timestamp;
 }
 
@@ -358,7 +358,7 @@ int64_t sigGetPlatformProductionTime(void)
 	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, unix_time), &timestamp, sizeof(timestamp));
-		timestamp = swap_int64(timestamp);
+		timestamp = ntoh64(timestamp);
 	}
 	else { // version 1 or 2
 		return sigGetBoardProductionTime();
@@ -423,7 +423,7 @@ int8_t sigGetElementProductionTime(uint8_t tp, int64_t* timestamp, uint16_t sig_
 	uint16_t o = findSignature(tp, sig_offset);
 	if (o == sig_offset) {
 		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, unix_time), &ts, sizeof(ts));
-		*timestamp = swap_int64(ts);
+		*timestamp = ntoh64(ts);
 		return 0;
 	}
 	return -1;
@@ -486,7 +486,7 @@ int32_t sigGetElementDataLength(uint8_t tp, uint16_t sig_offset)
 	uint16_t o = findSignature(tp, sig_offset);
 	if (o == sig_offset) {
 		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, data_length), &len, sizeof(len));
-		return swap_uint16(len);
+		return ntoh16(len);
 	}
 	return -1;
 }
@@ -497,7 +497,7 @@ int32_t sigGetElementData(uint8_t tp, uint8_t* buffer, uint16_t length, uint16_t
 	if (o == sig_offset) {
 		uint16_t len;
 		sigAreaRead(sig_offset+offsetof(usersig_header_v3_component_t, data_length), &len, sizeof(len));
-		len = swap_uint16(len);
+		len = ntoh16(len);
 		if (len <= data_offset) {
 			return 0;
 		}

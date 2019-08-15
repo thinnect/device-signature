@@ -1,0 +1,126 @@
+size=768
+init=0
+
+        EUI: DEADBEEF12345678
+ Board UUID: 00000000-0000-0000-0000-000000000000
+      Board: testboard
+    Version: 1.2.3
+     Serial:  (00000000-0000-0000-0000-000000000000)
+  Mfgr UUID: 00000000-0000-0000-0000-000000000000
+  Prod time: 1544374697
+Pltfrm UUID: 00000000-0000-0000-0000-000000000000
+   Platform: testboard
+    Version: 1.2.3
+     Serial:  (00000000-0000-0000-0000-000000000000)
+  Mfgr UUID: 00000000-0000-0000-0000-000000000000
+  Prod time: 1544374697
+
+size=81
+init=0
+
+        EUI: DEADBEEF12345678
+ Board UUID: 85813947-be7a-4d44-9476-831a85ad48c7
+      Board: testboard
+    Version: 1.2.3
+     Serial:  (00000000-0000-0000-0000-000000000000)
+  Mfgr UUID: 5f8e0f50-5b3d-4c64-8b2d-c32f4117d369
+  Prod time: 1544381385
+Pltfrm UUID: 85813947-be7a-4d44-9476-831a85ad48c7
+   Platform: testboard
+    Version: 1.2.3
+     Serial:  (00000000-0000-0000-0000-000000000000)
+  Mfgr UUID: 5f8e0f50-5b3d-4c64-8b2d-c32f4117d369
+  Prod time: 1544381385
+
+size=109
+init=0
+
+        EUI: DEADBEEF1234567C
+ Board UUID: 215e8f18-1434-42bb-a430-52a327c0ff45
+      Board: testboard
+    Version: 1.2.3
+     Serial: 123456 (31323334-3536-0000-0000-000000000000)
+  Mfgr UUID: fa780dd9-0794-4759-b8d5-d8ce7477418b
+  Prod time: 1544437551
+Pltfrm UUID: 215e8f18-1434-42bb-a430-52a327c0ff45
+   Platform: testboard
+    Version: 1.2.3
+     Serial: 123456 (31323334-3536-0000-0000-000000000000)
+  Mfgr UUID: fa780dd9-0794-4759-b8d5-d8ce7477418b
+  Prod time: 1544437551
+
+size=194
+init=0
+
+        EUI: DEADBEEF1234567C
+ Board UUID: 215e8f18-1434-42bb-a430-52a327c0ff45
+      Board: testboard
+    Version: 1.2.3
+     Serial: 123456 (31323334-3536-0000-0000-000000000000)
+  Mfgr UUID: fa780dd9-0794-4759-b8d5-d8ce7477418b
+  Prod time: 1544437551
+Pltfrm UUID: 238ba9a9-b9c9-4eb7-8ea6-21f99d964beb
+   Platform: testplatform
+    Version: 4.5.6
+     Serial: 123456 (31323334-3536-0000-0000-000000000000)
+  Mfgr UUID: fa780dd9-0794-4759-b8d5-d8ce7477418b
+  Prod time: 1544437615
+
+size=540
+init=0
+
+        EUI: DEADBEEF1234567F
+ Board UUID: 5e52abc2-2f84-400e-98c3-f355433b434e
+      Board: THN_EA000001
+    Version: 3.1.0
+     Serial: 0 (30000000-0000-0000-0000-000000000000)
+  Mfgr UUID: 3bd6e3b8-db6d-11e8-9f8b-f2801f1b9fd2
+  Prod time: 1544538285
+Pltfrm UUID: 16815b0e-5d04-46d8-ab6e-cc208d1255d3
+   Platform: THN_AS000010
+    Version: 9.0.0
+     Serial: 0 (30000000-0000-0000-0000-000000000000)
+  Mfgr UUID: 3bd6e3b8-db6d-11e8-9f8b-f2801f1b9fd2
+  Prod time: 1544540991
+
+sig @ 0x00C4
+   Cmp UUID: 10563044-1662-4ac1-a71c-219ddda2e48f
+       Name: THN_EA000002
+    Version: 5.0.0
+  Mfgr UUID: 3bd6e3b8-db6d-11e8-9f8b-f2801f1b9fd2
+  Prod time: 1544540991
+   Position: 0
+     Serial: 0 (30000000-0000-0000-0000-000000000000)
+       Data: 0
+
+sig @ 0x011A
+   Cmp UUID: 8de23d03-4651-48fb-94a0-1561945dc356
+       Name: THN_EA000011
+    Version: 0.1.0
+  Mfgr UUID: 3bd6e3b8-db6d-11e8-9f8b-f2801f1b9fd2
+  Prod time: 1544540991
+   Position: 0
+     Serial: 0 (30000000-0000-0000-0000-000000000000)
+       Data: 0
+
+sig @ 0x0170
+   Cmp UUID: 8de23d03-4651-48fb-94a0-1561945dc356
+       Name: THN_EA000011
+    Version: 0.1.0
+  Mfgr UUID: 3bd6e3b8-db6d-11e8-9f8b-f2801f1b9fd2
+  Prod time: 1544540991
+   Position: 1
+     Serial: 0 (30000000-0000-0000-0000-000000000000)
+       Data: 0
+
+sig @ 0x01C6
+   Cmp UUID: 3ca0f5d7-ef87-4084-97e7-2efb0ae9c0b2
+       Name: THN_EA000005
+    Version: 1.0.0
+  Mfgr UUID: 3bd6e3b8-db6d-11e8-9f8b-f2801f1b9fd2
+  Prod time: 1544540991
+   Position: 0
+     Serial: 0 (30000000-0000-0000-0000-000000000000)
+       Data: 0
+
+done

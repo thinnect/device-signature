@@ -1,0 +1,8 @@
+language: c
+sudo: false
+script:
+  - make -C test
+  - cd test
+  - ./test-app > out.txt
+  - cat out.txt
+  - diff out.txt test-reference.txt
