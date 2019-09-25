@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <time.h>
 
 #include <stddef.h>
 #ifndef offsetof
@@ -130,7 +129,8 @@ int8_t sigInit(void)
 		getEui64(mEUI64, offset);
 	}
 	else {
-		for (uint16_t i=0;i<sigAreaGetSize();i++) { // Detect if uninitialized
+		uint16_t i;
+		for (i=0;i<sigAreaGetSize();i++) { // Detect if uninitialized
 			if (sigAreaReadByte(i) != 0xFF) {
 				mStatus = SIG_BAD;
 				memset(mEUI64, 0, sizeof(mEUI64));
