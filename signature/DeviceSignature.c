@@ -52,7 +52,7 @@ static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 		}
 
 		if (signSize < sizeof(ver)+sizeof(signSize)+2) {
-			printf("SIG size %d\n", signSize);
+			//printf("SIG size %d\n", signSize);
 			return 0xFFFF; // Cannot continue searching
 		}
 
@@ -63,7 +63,7 @@ static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 		scrc = ntoh16(scrc);
 
 		if (crc != scrc) {
-			printf("SIG ERR: %x != %x\n", scrc, crc);
+			//printf("SIG ERR: %x != %x\n", scrc, crc);
 			return 0xFFFF;
 		}
 
