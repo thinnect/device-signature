@@ -4,8 +4,8 @@
  * @author Konstantin Bilozor, Raido Pahtma
  * @license MIT
  */
-#ifndef USERSIGNATUREAREATYPES_H_
-#define USERSIGNATUREAREATYPES_H_
+#ifndef DEVICESIGNATURETYPES_H_
+#define DEVICESIGNATURETYPES_H_
 
 #include "DeviceSignature.h"
 
@@ -74,7 +74,7 @@ typedef struct usersig_header_v3_eui {
 
 	uint8_t signature_type; // 0
 
-	int64_t unix_time; // Same moment in time
+	int64_t unix_time; // Generation timestamp
 
 	uint8_t eui64[8];
 } usersig_header_v3_eui_t;
@@ -108,4 +108,4 @@ typedef struct usersig_header_v3_component {
 } usersig_header_v3_component_t;
 #pragma pack(pop)
 
-#endif // USERSIGNATUREAREATYPES_H_
+#endif // DEVICESIGNATURETYPES_H_

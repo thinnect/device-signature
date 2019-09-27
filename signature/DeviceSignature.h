@@ -4,8 +4,8 @@
  * @author Konstantin Bilozor, Raido Pahtma
  * @license MIT
  */
-#ifndef USERSIGNATUREAREA_H_
-#define USERSIGNATUREAREA_H_
+#ifndef DEVICESIGNATURE_H_
+#define DEVICESIGNATURE_H_
 
 enum UserSignatureAreaEnum {
 	USERSIG_BOARDNAME_MAX_STRLEN = 16,
@@ -33,14 +33,6 @@ enum SignatureTypes {
 	SIGNATURE_TYPE_COMPONENT = 3 // Components list individual parts of a platform
 };
 
-
-
-// -----------------------------------------------------------------------------
-// General signature - board & platform API
-// -----------------------------------------------------------------------------
-
-int8_t   sigInit(void);
-
 enum SigInitResults {
 	SIG_OFF   = -128,
 	SIG_GOOD  = 0,
@@ -48,11 +40,36 @@ enum SigInitResults {
 	SIG_EMPTY = 127
 };
 
-// Copy the EUI64 into the specified buffer
-// EUI gets initialized to all 0 on errors and all ff when no signature found.
-void     sigGetEui64(uint8_t *buf);
+// -----------------------------------------------------------------------------
+// General signature - board & platform API
+// -----------------------------------------------------------------------------
 
-// Returns the last 2 bytes of the EUI64, takes care not to return 0 or bcast.
+/**
+ * Initialize the signature module, load EUI64.
+ * EUI gets initialized to all 0 on errors and all ff when no signature found.
+ *
+ * @return One of SigInitResults.
+ */
+int8_t   sigInit(void);
+
+/**
+ * Copy the EUI64 into the specified buffer
+ *
+ * @param buf A 16 byte buffer.
+ */
+void     sigGetEui64(uint8_t * buf);
+
+/**
+ * Override the EUI64, not persistent
+ * @param buf 8-byte EUI64 buffer.
+ */
+void     sigSetEui64(uint8_t buf[8]);
+
+/**
+ * Returns the last 2 bytes of the EUI64, takes care not to return 0 or bcast.
+ *
+ * @return The last 2 bytes of the EUI64 or 1 when no EUI64.
+ */
 uint16_t sigGetNodeId(void);
 
 semver_t sigGetBoardVersion(void);
@@ -61,8 +78,25 @@ void     sigGetBoardUUID(uint8_t uuid[16]);
 void     sigGetPlatformUUID(uint8_t uuid[16]);
 void     sigGetBoardManufacturerUUID(uint8_t uuid[16]);
 void     sigGetPlatformManufacturerUUID(uint8_t uuid[16]);
-void     sigGetBoardName(char buf[16]);
-void     sigGetPlatformName(char buf[16]);
+
+/**
+ * Get the board name, 0 padded and 16 characters long. Will be 0 terminated
+ * if 17 bytes, may not be, if 16.
+ *
+ * @param buf A buffer to store the name, at least 16 bytes.
+ * @param length The buffer length, guaranteed to be 0 terminated if > 16.
+ */
+void     sigGetBoardName(char buf[], uint8_t length);
+
+/**
+ * Get the platform name, 0 padded and 16 characters long. Will be 0 terminated
+ * if 17 bytes, may not be, if 16.
+ *
+ * @param buf A buffer to store the name, at least 16 bytes.
+ * @param length The buffer length, guaranteed to be 0 terminated if > 16.
+ */
+void     sigGetPlatformName(char buf[], uint8_t length);
+
 int64_t  sigGetBoardProductionTime(void);
 int64_t  sigGetPlatformProductionTime(void);
 void     sigGetBoardSerial(uint8_t serial[16]);
@@ -78,12 +112,18 @@ semver_t sigGetSignatureVersion(void);
 // values on SUCCESS.
 // -----------------------------------------------------------------------------
 
-// Start searching for a component signature from the specified offset.
-// returns the offset of the found component entry or 0xFFFF if nothing found.
+/**
+ * Find the first signature component.
+ *
+ * @return the offset of the found component entry or 0xFFFF if nothing found.
+ */
 uint16_t sigFirstComponent();
 
-// Find the next component, offset must belong to a previous signature entry.
-// returns the offset of the found component entry or 0xFFFF if nothing found.
+/**
+ * Find the next component, offset must belong to a previous signature entry.
+ *
+ * @return The offset of the found component entry or 0xFFFF if nothing found.
+ */
 uint16_t sigNextComponent(uint16_t offset);
 
 int8_t sigGetComponentUUID(uint8_t uuid[16], uint16_t offset);
@@ -117,4 +157,4 @@ int8_t sigGetElementPosition(uint8_t tp, uint8_t* position, uint16_t offset);
 int32_t sigGetElementDataLength(uint8_t tp, uint16_t offset);
 int32_t sigGetElementData(uint8_t tp, uint8_t* buf, uint16_t bufLen, uint16_t dataOffset, uint8_t offset);
 
-#endif // USERSIGNATUREAREA_H_
+#endif // DEVICESIGNATURE_H_

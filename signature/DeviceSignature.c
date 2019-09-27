@@ -149,6 +149,11 @@ void sigGetEui64(uint8_t *buf)
 	memcpy(buf, mEUI64, 8);
 }
 
+void sigSetEui64(uint8_t *buf)
+{
+	memcpy(mEUI64, buf, 8);
+}
+
 uint16_t sigGetNodeId(void)
 {
 	uint16_t addr = mEUI64[6] << 8 | mEUI64[7];
@@ -288,12 +293,18 @@ void sigGetPlatformManufacturerUUID(uint8_t uuid[16])
 	}
 }
 
-void sigGetBoardName(char buf[17])
+void sigGetBoardName(char buf[], uint8_t length)
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
+
+	if(length < 16) {
+		return; // The user must provide a buffer of 16 or 17 bytes, depending on the use-case
+	}
+
+	buf[0] = '\0'; // Make it an empty string, update if name found
+
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_name), buf, 16);
-		buf[16] = '\0';
 	}
 	else { // version 1 or 2
 		offset = findSignature(0, 0);
@@ -301,31 +312,33 @@ void sigGetBoardName(char buf[17])
 			semver_t sigver = getSignatureVersion(offset);
 			if (sigver.major == 1) {
 				sigAreaRead(offset+offsetof(usersig_header_v1_t, board_name), buf, 16);
-				buf[16] = '\0';
 			}
 			else if (sigver.major == 2) {
 				sigAreaRead(offset+offsetof(usersig_header_v2_t, board_name), buf, 16);
-				buf[16] = '\0';
-			}
-			else {
-				buf[0] = '\0';
 			}
 		}
-		else {
-			buf[0] = '\0';
-		}
+	}
+	if(length > 16) {
+		buf[16] = '\0';
 	}
 }
 
-void sigGetPlatformName(char buf[17])
+void sigGetPlatformName(char buf[], uint8_t length)
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
+
+	if(length < 16) {
+		return; // The user must provide a buffer of 16 or 17 bytes, depending on the use-case
+	}
+
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_name), buf, 16);
-		buf[16] = '\0';
+		if(length > 16) {
+			buf[16] = '\0';
+		}
 	}
 	else { // Fall back to board name for older versions or cases where there is no platform sig
-		sigGetBoardName(buf);
+		sigGetBoardName(buf, length);
 	}
 }
 

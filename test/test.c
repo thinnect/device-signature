@@ -36,7 +36,7 @@ void printSignatureInfo() {
 	sprintUUID(suuid, uuid);
 	printf(" Board UUID: %s\n", suuid);
 
-	sigGetBoardName(name);
+	sigGetBoardName(name, sizeof(name));
 	printf("      Board: %s\n", name);
 
 	ver = sigGetBoardVersion();
@@ -58,7 +58,7 @@ void printSignatureInfo() {
 	sprintUUID(suuid, uuid);
 	printf("Pltfrm UUID: %s\n", suuid);
 
-	sigGetPlatformName(name);
+	sigGetPlatformName(name, sizeof(name));
 	printf("   Platform: %s\n", name);
 
 	ver = sigGetPlatformVersion();
