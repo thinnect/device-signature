@@ -26,10 +26,6 @@ static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 		uint16_t signSize = 0;
 		packed_semver_t ver;
 		uint8_t signType = 0;
-		uint16_t i;
-
-		uint16_t crc = CRC_START_XMODEM;
-		uint16_t scrc = 0;
 
 		sigAreaRead(offset, &ver, sizeof(ver)); // Read signature version
 
@@ -56,18 +52,25 @@ static uint16_t findSignature(uint8_t sigtype, uint16_t offset)
 			return 0xFFFF; // Cannot continue searching
 		}
 
-		for (i=0; i<(signSize-2); i++) {
-			crc = update_crc_ccitt(crc, sigAreaReadByte(offset+i));
-		}
-		sigAreaRead(offset+i, &scrc, 2);
-		scrc = ntoh16(scrc);
+		#ifndef DEVICESIGNATURE_DISABLE_CRC
+		{
+			uint16_t crc = CRC_START_XMODEM;
+			uint16_t scrc = 0;
+			uint16_t i;
+			for (i=0; i<(signSize-2); i++) {
+				crc = update_crc_ccitt(crc, sigAreaReadByte(offset+i));
+			}
+			sigAreaRead(offset+i, &scrc, 2);
+			scrc = ntoh16(scrc);
 
-		if (crc != scrc) {
-			//printf("SIG ERR: %x != %x\n", scrc, crc);
-			return 0xFFFF;
-		}
+			if (crc != scrc) {
+				//printf("SIG ERR: %x != %x\n", scrc, crc);
+				return 0xFFFF;
+			}
 
-		//printf("SIG@%04X OK CRC:%x\n", offset, scrc, crc);
+			//printf("SIG@%04X OK CRC:%x\n", offset, scrc, crc);
+		}
+		#endif//DEVICESIGNATURE_DISABLE_CRC
 
 		if ((ver.major == 1)||(ver.major == 2)) {
 			return offset; // Got a good ver 1 or 2 signature, which are always type 0
