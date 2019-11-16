@@ -74,10 +74,10 @@ uint16_t sigGetNodeId(void);
 
 semver_t sigGetBoardVersion(void);
 semver_t sigGetPlatformVersion(void);
-void     sigGetBoardUUID(uint8_t uuid[16]);
-void     sigGetPlatformUUID(uint8_t uuid[16]);
-void     sigGetBoardManufacturerUUID(uint8_t uuid[16]);
-void     sigGetPlatformManufacturerUUID(uint8_t uuid[16]);
+int8_t   sigGetBoardUUID(uint8_t uuid[16]);
+int8_t   sigGetPlatformUUID(uint8_t uuid[16]);
+int8_t   sigGetBoardManufacturerUUID(uint8_t uuid[16]);
+int8_t   sigGetPlatformManufacturerUUID(uint8_t uuid[16]);
 
 /**
  * Get the board name, 0 padded and 16 characters long. Will be 0 terminated

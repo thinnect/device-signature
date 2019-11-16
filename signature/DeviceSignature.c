@@ -222,11 +222,12 @@ semver_t sigGetPlatformVersion(void)
 	return v;
 }
 
-void sigGetBoardUUID(uint8_t uuid[16])
+int8_t sigGetBoardUUID(uint8_t uuid[16])
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_uuid), uuid, USERSIG_UUID_LENGTH);
+		return SIG_GOOD;
 	}
 	else { // version 1 or 2
 		offset = findSignature(0, 0);
@@ -237,6 +238,7 @@ void sigGetBoardUUID(uint8_t uuid[16])
 			}
 			else if (sigver.major == 2) {
 				sigAreaRead(offset+offsetof(usersig_header_v2_t, board_uuid), uuid, USERSIG_UUID_LENGTH);
+				return SIG_GOOD;
 			}
 			else {
 				memset(uuid, 0, USERSIG_UUID_LENGTH);
@@ -246,24 +248,27 @@ void sigGetBoardUUID(uint8_t uuid[16])
 			memset(uuid, 0, USERSIG_UUID_LENGTH);
 		}
 	}
+	return SIG_EMPTY;
 }
 
-void sigGetPlatformUUID(uint8_t uuid[16])
+int8_t sigGetPlatformUUID(uint8_t uuid[16])
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, component_uuid), uuid, USERSIG_UUID_LENGTH);
 	}
 	else { // Fall back to board UUID for older versions or cases where there is no platform sig
-		sigGetBoardUUID(uuid);
+		return sigGetBoardUUID(uuid);
 	}
+	return SIG_GOOD;
 }
 
-void sigGetBoardManufacturerUUID(uint8_t uuid[16])
+int8_t sigGetBoardManufacturerUUID(uint8_t uuid[16])
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_BOARD, 0);
 	if (offset < 0xFFFF) {
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
+		return SIG_GOOD;
 	}
 	else { // version 1 or 2
 		offset = findSignature(0, 0);
@@ -274,6 +279,7 @@ void sigGetBoardManufacturerUUID(uint8_t uuid[16])
 			}
 			else if (sigver.major == 2) {
 				sigAreaRead(offset+offsetof(usersig_header_v2_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
+				return SIG_GOOD;
 			}
 			else {
 				memset(uuid, 0, USERSIG_UUID_LENGTH);
@@ -283,17 +289,19 @@ void sigGetBoardManufacturerUUID(uint8_t uuid[16])
 			memset(uuid, 0, USERSIG_UUID_LENGTH);
 		}
 	}
+	return SIG_EMPTY;
 }
 
-void sigGetPlatformManufacturerUUID(uint8_t uuid[16])
+int8_t sigGetPlatformManufacturerUUID(uint8_t uuid[16])
 {
 	uint16_t offset = findSignature(SIGNATURE_TYPE_PLATFORM, 0);
 	if (offset < 0xFFFF) { // This is version 3 (or later)
 		sigAreaRead(offset+offsetof(usersig_header_v3_component_t, manufacturer_uuid), uuid, USERSIG_UUID_LENGTH);
 	}
 	else { // Fall back to board manufacturer if no platform manufacturer
-		sigGetBoardManufacturerUUID(uuid);
+		return sigGetBoardManufacturerUUID(uuid);
 	}
+	return SIG_GOOD;
 }
 
 void sigGetBoardName(char buf[], uint8_t length)
