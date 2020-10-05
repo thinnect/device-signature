@@ -419,7 +419,7 @@ uint16_t sigGetLicenseFile(uint8_t buf[])
 	if (offset < 0xFFFF)
 	{
 		sigAreaRead(offset+sizeof(packed_semver_t), &sz, sizeof(sz));
-		sz = ntoh16(sz) - sizeof(usersig_header_v3_t); // Values are stored big-endian
+		sz = ntoh16(sz) - sizeof(usersig_header_v3_t) - 2; // Size - header - crc
 		sigAreaRead(offset+sizeof(usersig_header_v3_t), buf, sz);
 		return sz;
 	}
