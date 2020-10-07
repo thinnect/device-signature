@@ -16,6 +16,8 @@
 #include "DeviceSignature.h"
 #include "DeviceSignatureTypes.h"
 
+#include "platform_eui.h"
+
 
 static uint8_t mStatus = SIG_OFF;
 static uint8_t mEUI64[8];
@@ -126,12 +128,22 @@ void getEui64(uint8_t eui[8], uint16_t offset) {
 
 int8_t sigInit(void)
 {
-	uint16_t offset = findSignature(0, 0);
+	uint16_t offset = findSignature(SIGNATURE_TYPE_EUI64, 0);
 	if (offset < 0xFFFF) {
 		mStatus = SIG_GOOD;
 		getEui64(mEUI64, offset);
 	}
 	else {
+		semver_t v = sigGetBoardVersion();
+		// If there is no EUI64 in the signature, signature still can be valid,
+		// check for board version and use built-in EUI.
+		if ((v.major > 0) || (v.minor > 0) || (v.patch > 0)) {
+			if (platform_eui(mEUI64)) {
+				mStatus = SIG_GOOD;
+				return SIG_GOOD;
+			}
+		}
+
 		uint16_t i;
 		for (i=0;i<sigAreaGetSize();i++) { // Detect if uninitialized
 			if (sigAreaReadByte(i) != 0xFF) {
