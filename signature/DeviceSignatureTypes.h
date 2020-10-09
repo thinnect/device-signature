@@ -65,6 +65,18 @@ typedef struct usersig_header_v2 {
 	uint8_t manufacturer_uuid[USERSIG_UUID_LENGTH];
 } usersig_header_v2_t;
 
+typedef struct usersig_header_v3 {
+	uint8_t version_major;
+	uint8_t version_minor;
+	uint8_t version_patch;
+
+	uint16_t signature_size;
+
+	uint8_t signature_type; // 0
+
+	int64_t unix_time; // Generation timestamp
+} usersig_header_v3_t;
+
 typedef struct usersig_header_v3_eui {
 	uint8_t version_major;
 	uint8_t version_minor;

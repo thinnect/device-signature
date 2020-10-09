@@ -27,10 +27,11 @@ typedef struct packed_semver {
 #pragma pack(pop)
 
 enum SignatureTypes {
-	SIGNATURE_TYPE_EUI64 = 0,    // EUI64 is the IEEE Extended Unique Identifier
-	SIGNATURE_TYPE_BOARD = 1,    // Boards are the core of the system - MCU
-	SIGNATURE_TYPE_PLATFORM = 2, // Platforms define the set of components
-	SIGNATURE_TYPE_COMPONENT = 3 // Components list individual parts of a platform
+	SIGNATURE_TYPE_EUI64 = 0,     // EUI64 is the IEEE Extended Unique Identifier
+	SIGNATURE_TYPE_BOARD = 1,     // Boards are the core of the system - MCU
+	SIGNATURE_TYPE_PLATFORM = 2,  // Platforms define the set of components
+	SIGNATURE_TYPE_COMPONENT = 3, // Components list individual parts of a platform
+	SIGNATURE_TYPE_LICENSE = 4    // License file
 };
 
 enum SigInitResults {
@@ -97,14 +98,20 @@ void     sigGetBoardName(char buf[], uint8_t length);
  */
 void     sigGetPlatformName(char buf[], uint8_t length);
 
+/**
+ * Get license file.
+ * @param buf A buffer to store license file.
+ *
+ * @return Returns license file length.
+ */
+uint16_t sigGetLicenseFile(uint8_t buf[]);
+
 int64_t  sigGetBoardProductionTime(void);
 int64_t  sigGetPlatformProductionTime(void);
 void     sigGetBoardSerial(uint8_t serial[16]);
 void     sigGetPlatformSerial(uint8_t serial[16]);
 
 semver_t sigGetSignatureVersion(void);
-
-
 
 // -----------------------------------------------------------------------------
 // Component API, use sigFindComponent to search for component info

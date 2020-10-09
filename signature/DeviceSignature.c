@@ -412,6 +412,20 @@ void sigGetPlatformSerial(uint8_t serial[16])
 	}
 }
 
+uint16_t sigGetLicenseFile(uint8_t buf[])
+{
+	uint16_t sz = 0;
+	uint16_t offset = findSignature(SIGNATURE_TYPE_LICENSE, 0);
+	if (offset < 0xFFFF)
+	{
+		sigAreaRead(offset+sizeof(packed_semver_t), &sz, sizeof(sz));
+		sz = ntoh16(sz) - sizeof(usersig_header_v3_t) - 2; // Size - header - crc
+		sigAreaRead(offset+sizeof(usersig_header_v3_t), buf, sz);
+		return sz;
+	}
+	return sz;
+}
+
 // -----------------------------------------------------------------------------
 // Element API
 // -----------------------------------------------------------------------------
