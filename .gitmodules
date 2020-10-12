@@ -7,3 +7,7 @@
 	url = https://github.com/lammertb/libcrc.git
 	branch = master
 
+[submodule "test/zoo/thinnect.node-platform"]
+	path = test/zoo/thinnect.node-platform
+	url = https://github.com/thinnect/node-platform.git
+	branch = eui
