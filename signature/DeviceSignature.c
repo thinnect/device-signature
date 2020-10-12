@@ -134,11 +134,10 @@ int8_t sigInit(void)
 		getEui64(mEUI64, offset);
 	}
 	else {
-		semver_t v = sigGetBoardVersion();
-		// If there is no EUI64 in the signature, signature still can be valid,
-		// check for board version and use built-in EUI.
-		if ((v.major > 0) || (v.minor > 0) || (v.patch > 0)) {
-			if (platform_eui(mEUI64)) {
+		// Init platform signature and check for board version.
+		if (platform_eui(mEUI64)) {
+			semver_t v = sigGetBoardVersion();
+			if ((v.major > 0) || (v.minor > 0) || (v.patch > 0)) {
 				mStatus = SIG_GOOD;
 				return SIG_GOOD;
 			}
