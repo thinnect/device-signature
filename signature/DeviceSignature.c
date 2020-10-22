@@ -147,12 +147,10 @@ int8_t sigInit(void)
 		for (i=0;i<sigAreaGetSize();i++) { // Detect if uninitialized
 			if (sigAreaReadByte(i) != 0xFF) {
 				mStatus = SIG_BAD;
-				memset(mEUI64, 0, sizeof(mEUI64));
 				return SIG_BAD;
 			}
 		}
 		mStatus = SIG_EMPTY;
-		memset(mEUI64, 0xFF, sizeof(mEUI64));
 		return SIG_EMPTY;
 	}
 	return SIG_GOOD;
