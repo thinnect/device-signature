@@ -435,6 +435,29 @@ uint16_t sigGetLicenseFile(uint8_t buf[])
 	return sz;
 }
 
+uint16_t sigGetLength(void)
+{
+	uint16_t out;
+	uint16_t signlen = findSignature(SIGNATURE_TYPE_BOARD, 0);
+
+	while (sigAreaGetSize() > signlen)
+	{
+		out = (sigAreaReadByte(signlen+3) << 8) | sigAreaReadByte(signlen+4);
+
+		if (out == 0xFFFF)
+		{
+			break;
+		}
+		signlen = signlen + out;
+	}
+
+	if (signlen > sigAreaGetSize())
+	{
+		return 0xFFFF;
+	}
+	return signlen;
+}
+
 // -----------------------------------------------------------------------------
 // Element API
 // -----------------------------------------------------------------------------
