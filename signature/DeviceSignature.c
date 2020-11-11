@@ -453,7 +453,7 @@ uint16_t sigGetLength(void)
 
 	if (signlen > sigAreaGetSize())
 	{
-		return 0xFFFF;
+		return 0;
 	}
 	return signlen;
 }
