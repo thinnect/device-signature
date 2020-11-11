@@ -109,7 +109,7 @@ uint16_t sigGetLicenseFile(uint8_t buf[]);
 /**
  * Get length of the signature.
  *
- * @return Returns signature length. 0xFFFF if fails.
+ * @return Returns signature length.
  */
 uint16_t sigGetLength(void);
 
