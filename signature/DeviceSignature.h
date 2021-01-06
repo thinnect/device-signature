@@ -56,7 +56,7 @@ int8_t   sigInit(void);
 /**
  * Copy the EUI64 into the specified buffer
  *
- * @param buf A 16 byte buffer.
+ * @param buf An 8-byte buffer.
  */
 void     sigGetEui64(uint8_t * buf);
 
