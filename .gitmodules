@@ -10,4 +10,4 @@
 [submodule "test/zoo/thinnect.node-platform"]
 	path = test/zoo/thinnect.node-platform
 	url = https://github.com/thinnect/node-platform.git
-	branch = eui
+	branch = master
