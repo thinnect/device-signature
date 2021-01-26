@@ -7,6 +7,8 @@
 #ifndef DEVICESIGNATURE_H_
 #define DEVICESIGNATURE_H_
 
+#include <stdint.h>
+
 enum UserSignatureAreaEnum {
 	USERSIG_BOARDNAME_MAX_STRLEN = 16,
 	USERSIG_UUID_LENGTH = 16,

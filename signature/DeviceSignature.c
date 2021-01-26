@@ -8,7 +8,7 @@
 #define offsetof(t, m) ((size_t)&((t*)0)->m )
 #endif//offsetof
 
-#include "checksum.h" // for crc_xmodem / crc_ccitt_generic from libcrc
+#include "libcrc/checksum.h" // for crc_xmodem / crc_ccitt_generic
 #include "endianness.h"
 
 #include "SignatureArea.h"
