@@ -6,6 +6,14 @@
  */
 #include "em_device.h"
 
+#ifndef USERDATA_SIZE
+	#ifdef _SILICON_LABS_32B_SERIES_1
+		#define USERDATA_SIZE 2048
+	#else
+		#error USERDATA_SIZE not known!
+	#endif
+#endif//USERDATA_SIZE
+
 #include <string.h> // memcpy
 
 /*
